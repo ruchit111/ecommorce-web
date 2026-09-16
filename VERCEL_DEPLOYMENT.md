@@ -16,12 +16,11 @@ VITE_API_URL=https://YOUR-BACKEND-DOMAIN
 
 The `frontend/vercel.json` rewrite keeps React Router pages working on refresh.
 
-## Backend requirements
+## Environment variables
 
-Deploy the `backend` separately on a Node host such as Render, Railway, or another server host. Use a persistent MongoDB Atlas database and set:
+The Express backend is included as a Vercel serverless API under `/api/*`. Create a MongoDB Atlas database and add these Vercel environment variables for **Production**:
 
 ```text
-PORT=5000
 NODE_ENV=production
 FRONTEND_URL=https://YOUR-FRONTEND-DOMAIN.vercel.app
 USE_MEMORY_DB=false
@@ -29,6 +28,6 @@ MONGODB_URI=mongodb+srv://...
 JWT_SECRET=use-a-long-random-secret
 ```
 
-After the backend is deployed, put its HTTPS URL in Vercel as `VITE_API_URL`, then redeploy the frontend.
+No `VITE_API_URL` is needed when the API is deployed in the same Vercel project. The frontend uses its own `/api` path in production.
 
 Do not use `USE_MEMORY_DB=true` in production because its data disappears whenever the server restarts.

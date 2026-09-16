@@ -50,6 +50,25 @@ const User = mongoose.model("User", userSchema);
 const Product = mongoose.model("Product", productSchema);
 const Order = mongoose.model("Order", orderSchema);
 
+let memoryServer;
+
+async function connectDatabase() {
+    if (mongoose.connection.readyState === 1) return;
+
+    let mongoUri = process.env.MONGODB_URI;
+    if (process.env.USE_MEMORY_DB === "true") {
+        memoryServer = memoryServer || await MongoMemoryServer.create();
+        mongoUri = memoryServer.getUri("shopzone");
+        console.log("Development MongoDB started automatically.");
+    }
+
+    if (!mongoUri) {
+        throw new Error("MONGODB_URI is required in production");
+    }
+
+    await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
+}
+
 function createToken(user) {
     return jwt.sign({ userId: user._id, name: user.name }, JWT_SECRET, { expiresIn: "7d" });
 }
@@ -215,19 +234,8 @@ app.post("/api/orders", requireAuth, async (req, res) => {
 });
 
 async function startServer() {
-    let memoryServer;
     try {
-        let mongoUri = process.env.MONGODB_URI;
-
-        if (process.env.USE_MEMORY_DB === "true") {
-            memoryServer = await MongoMemoryServer.create();
-            mongoUri = memoryServer.getUri("shopzone");
-            console.log("Development MongoDB started automatically.");
-        }
-
-        await mongoose.connect(mongoUri || "mongodb://127.0.0.1:27017/shopzone", {
-            serverSelectionTimeoutMS: 5000
-        });
+        await connectDatabase();
         app.listen(PORT, () => console.log(`ShopZone API running on port ${PORT}`));
 
         const shutdown = async () => {
@@ -243,4 +251,6 @@ async function startServer() {
     }
 }
 
-startServer();
+if (require.main === module) startServer();
+
+module.exports = { app, connectDatabase };
