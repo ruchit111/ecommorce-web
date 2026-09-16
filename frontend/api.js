@@ -21,6 +21,6 @@ export async function apiRequest(path, options = {}) {
         throw new Error(data.error ? `${data.message}: ${data.error}` : (data.message || "Request failed"));
     }
     return data;
-}
+}  
 
 export { API_URL };
